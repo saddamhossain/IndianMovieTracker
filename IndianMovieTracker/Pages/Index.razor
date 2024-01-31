@@ -1,0 +1,267 @@
+﻿@page "/"
+@inject IMovie _IMovie
+@inject IJSRuntime _IJSRuntime
+
+<style>
+    .footer {
+        position:fixed;
+        bottom:0;
+    }
+</style>
+
+<div class="row margin-class">
+    <h4><span class="badge badge-primary"><i class="fa fa-film" aria-hidden="true"></i>&nbsp; Indian Movie Tracker By <a href="http://saddamhossain.net" target="_blank" style="color:white"> Md. Saddam Hossain Rana </a> </span></h4>
+</div>
+
+<div class="row margin-class">
+
+    <div class="row col-5">
+
+        <div class="col-6">
+            <h5><span class="badge badge-secondary">Choose an Industry</span></h5>
+            <select class="form-control" @bind="@Filter_Industry" @bind:event="oninput" @onchange="(()=> On_Change_Filter_Industry())">
+                <option value="" style="display:none"></option>
+                <option value="All"> All Industries</option>
+                @if (industry_list != null)
+                {
+                    foreach (var item in industry_list)
+                    {
+                        <option value="@item.Code"> @item.Name </option>
+                    }
+                }
+            </select>
+        </div>
+
+        @if (Actor_Dropdown_Hide_Show)
+        {
+            <div class="col-6">
+                <h5><span class="badge badge-secondary">Select an Actor</span></h5>
+                <select class="form-control" @bind="@Filter_Actor" @bind:event="oninput" @onchange="(()=> On_Change_Filter_Actor())">
+                    <option value="" style="display:none"></option>
+                    @if (actor_list != null)
+                        foreach (var item in actor_list)
+                        {
+                            <option value="@item.Code"> @item.Name </option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+
+        @if (Language_Director_Year_DataTable_Image_Hide_Show)
+        {
+            <div class="col-6">
+                <h5><span class="badge badge-secondary">Choose a Language</span></h5>
+                <select class="form-control" @bind="@Filter_Language" @bind:event="oninput" @onchange="(()=> On_Change_Filter_Language())">
+                    <option value="All"> @InitialText (@all_language_directors_years_count)</option>
+                    @if (languageGroupedViewModel != null)
+                        foreach (var item in languageGroupedViewModel)
+                        {
+                            <option value="@item.LanguageName"> @item.LanguageName (@item.TotalCount) </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-6">
+                <h5><span class="badge badge-secondary">Choose a Director</span></h5>
+                <select class="form-control" @bind="@Filter_Director" @bind:event="oninput" @onchange="(()=> On_Change_Filter_Director())">
+                    <option value="All"> @InitialText (@all_language_directors_years_count)</option>
+                    @if (directorsGroupedViewModel != null)
+                        foreach (var item in directorsGroupedViewModel)
+                        {
+                            <option value="@item.DirectorName"> @item.DirectorName (@item.TotalCount)</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-6">
+                <h5><span class="badge badge-secondary">Choose an Year</span></h5>
+                <select class="form-control" @bind="@Filter_Year" @bind:event="oninput" @onchange="(()=> On_Change_Filter_Year())">
+                    <option value="All"> @InitialText (@all_language_directors_years_count)</option>
+                    @if (yearsGroupedViewModel != null)
+                        foreach (var item in yearsGroupedViewModel)
+                        {
+                            <option value="@item.Year"> @item.Year (@item.TotalCount) </option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+
+    </div>
+
+    @if (Language_Director_Year_DataTable_Image_Hide_Show)
+    {
+        <div class="row margin-class">
+            <img width="350" src="images/@SelectedActor.@Extension" />
+        </div>
+
+        <div class="col-8">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="d-flex table-warning">
+                        <th class="col-2">Year</th>
+                        <th class="col-3">Title</th>
+                        <th class="col-2">Role</th>
+                        <th class="col-3">Director</th>
+                        <th class="col-2">Language</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in movie_list)
+                    {
+                        <tr class="d-flex table-primary">
+                            <td class="col-2"> @item.Year </td>
+                            <td class="col-3"> @item.Title </td>
+                            <td class="col-2"> @item.Role </td>
+                            <td class="col-3"> @item.Director </td>
+                            <td class="col-2"> @item.Language </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="footer"> <strong> Disclaimer: </strong> The information on this site is taken from various sources like Google. We are not claiming 100% accuracy. We do not have any copyright on it, the credit is given to the google. </div>
+</div>
+
+
+@code{
+    #region variable declare
+    protected string InitialText { get; set; } = "All";
+
+    protected string Filter_Industry { set; get; }
+    protected string Filter_Actor { set; get; }
+    protected string Filter_Language { set; get; }
+    protected string Filter_Director { set; get; }
+    protected string Filter_Year { set; get; }
+
+    protected IEnumerable<Industry> industry_list { set; get; }
+    protected IEnumerable<Actor> actor_list { set; get; }
+    protected IEnumerable<Movie> movie_list { set; get; } = new List<Movie>();
+
+    protected IEnumerable<LanguageGroupedViewModel> languageGroupedViewModel = new List<LanguageGroupedViewModel>();
+    protected IEnumerable<DirectorsGroupedViewModel> directorsGroupedViewModel = new List<DirectorsGroupedViewModel>();
+    protected IEnumerable<YearsGroupedViewModel> yearsGroupedViewModel = new List<YearsGroupedViewModel>();
+
+    protected bool Actor_Dropdown_Hide_Show { set; get; } = false;
+    protected bool Language_Director_Year_DataTable_Image_Hide_Show { set; get; } = false;
+    protected bool Actor_Option { set; get; } = false;
+    protected string SelectedActor { set; get; }
+    protected string Extension = "jpg";
+
+    protected int all_language_directors_years_count { set; get; }
+    #endregion
+
+    protected override Task OnInitializedAsync()
+    {
+        industry_list = _IMovie.GetIndustries().ToList();
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+    }
+
+    protected void On_Change_Filter_Industry()
+    {
+        if (Filter_Industry == InitialText)
+        {
+            actor_list = _IMovie.GetActors();
+        }
+        else
+        {
+            actor_list = _IMovie.GetActorsByIndustry(Filter_Industry);
+        }
+
+        Filter_Actor = null;
+        Filter_Language = null;
+        Filter_Director = null;
+        Filter_Year = null;
+        Actor_Dropdown_Hide_Show = true;
+        Language_Director_Year_DataTable_Image_Hide_Show = false;
+        SelectedActor = null;
+        StateHasChanged();
+    }
+
+    protected void On_Change_Filter_Actor()
+    {
+        Language_Director_Year_DataTable_Image_Hide_Show = true;
+        SelectedActor = Filter_Actor;
+        all_language_directors_years_count = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).Count();
+
+        yearsGroupedViewModel = from s in _IMovie.GetAllMovies()
+                                where s.Actor == Filter_Actor
+                                group s by new { s.Year } into g
+                                orderby g.Key.Year
+                                select new YearsGroupedViewModel { Year = g.Key.Year, TotalCount = g.Count() };
+
+        directorsGroupedViewModel = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).GroupBy(s => new { s.Director }).OrderBy(g => g.Key.Director).Select(g => new DirectorsGroupedViewModel
+        {
+            DirectorName = g.Key.Director,
+            TotalCount = g.Count()
+        });
+
+        languageGroupedViewModel = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).GroupBy(s => new { s.Language }).OrderBy(g => g.Key.Language).Select(g => new LanguageGroupedViewModel
+        {
+            LanguageName = g.Key.Language,
+            TotalCount = g.Count()
+        });
+
+        movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).ToList();
+        StateHasChanged();
+    }
+
+    protected void On_Change_Filter_Language()
+    {
+        if (Filter_Language == InitialText)
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).ToList();
+        }
+        else
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor && s.Language == Filter_Language).ToList();
+        }
+
+        Filter_Director = InitialText;
+        Filter_Year = InitialText;
+        StateHasChanged();
+    }
+
+    protected void On_Change_Filter_Director()
+    {
+        if (Filter_Director == InitialText)
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).ToList();
+        }
+        else
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor && s.Director == Filter_Director).ToList();
+        }
+
+        Filter_Language = InitialText;
+        Filter_Year = InitialText;
+        StateHasChanged();
+    }
+
+    protected void On_Change_Filter_Year()
+    {
+        if (Filter_Year == InitialText)
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor).ToList();
+        }
+        else
+        {
+            movie_list = _IMovie.GetAllMovies().Where(s => s.Actor == Filter_Actor && s.Year == Convert.ToInt32(Filter_Year)).ToList();
+        }
+
+        Filter_Language = InitialText;
+        Filter_Director = InitialText;
+        StateHasChanged();
+    }
+
+}
